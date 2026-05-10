@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ניתוח תמהיל משכנתא — ניצן ואיתמר אבולעפיה</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Calibri', 'Segoe UI', Arial, sans-serif;
+    direction: rtl;
+    background: #F2F4F7;
+    color: #1A1A2E;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  .page-wrapper { max-width: 960px; margin: 0 auto; padding: 24px 16px 60px; }
+
+  /* ── HEADER ── */
+  .main-header {
+    background: linear-gradient(135deg, #1A3A5C 0%, #2E6DA4 100%);
+    border-radius: 14px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    color: #fff;
+  }
+  .main-header h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+  .main-header p  { font-size: 13px; color: #A8C8E8; }
+
+  /* ── KPI GRID ── */
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .kpi-card { background: #fff; border-radius: 12px; padding: 16px 18px; box-shadow: 0 1px 4px rgba(0,0,0,.07); border: 1px solid #E4E8EF; }
+  .kpi-label { font-size: 12px; color: #6B7A90; margin-bottom: 4px; }
+  .kpi-value { font-size: 24px; font-weight: 700; }
+  .kpi-sub   { font-size: 11px; color: #9BAABB; margin-top: 3px; }
+  .kpi-blue   { color: #1A3A5C; }
+  .kpi-warn   { color: #C77700; }
+  .kpi-danger { color: #C0392B; }
+
+  /* ── SECTION CARD ── */
+  .section-card { background: #fff; border-radius: 14px; margin-bottom: 24px; box-shadow: 0 1px 4px rgba(0,0,0,.07); border: 1px solid #E4E8EF; overflow: hidden; }
+  .section-header { padding: 14px 20px; font-size: 16px; font-weight: 700; color: #fff; }
+  .sh-navy  { background: #1A3A5C; }
+  .sh-blue  { background: #2E6DA4; }
+  .sh-grace { background: #C0392B; }
+  .section-body { padding: 20px; }
+
+  /* ── TABLE ── */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .data-table th { background: #F0F4F9; padding: 10px 13px; text-align: right; font-weight: 600; color: #4A5568; border-bottom: 2px solid #DDE3EC; }
+  .data-table td { padding: 9px 13px; text-align: right; border-bottom: 1px solid #EEF1F6; vertical-align: middle; }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: #F8FAFC; }
+  .data-table tr.alt td { background: #F9FBFD; }
+  .data-table tr.new-row td { background: #FFFBE6; }
+  .table-footer { font-size: 11px; color: #9BAABB; padding: 8px 13px; border-top: 1px solid #EEF1F6; }
+
+  /* ── BADGES ── */
+  .badge { font-size: 11px; padding: 3px 8px; border-radius: 5px; font-weight: 600; display: inline-block; margin-left: 5px; }
+  .b-blue  { background: #D6E8F7; color: #1A5276; }
+  .b-amber { background: #FEF5E7; color: #9A5800; }
+  .b-teal  { background: #D5F5E3; color: #0D6B40; }
+  .b-grace { background: #FDECEA; color: #8B1A1A; }
+  .b-shp   { background: #E8F5E9; color: #256029; }
+
+  /* ── CHARTS ── */
+  .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  @media (max-width: 600px) { .charts-grid { grid-template-columns: 1fr; } }
+  .chart-card { background: #fff; border-radius: 14px; padding: 18px; box-shadow: 0 1px 4px rgba(0,0,0,.07); border: 1px solid #E4E8EF; }
+  .chart-title { font-size: 14px; font-weight: 700; color: #1A3A5C; margin-bottom: 10px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; font-size: 12px; color: #6B7A90; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; display: inline-block; margin-left: 4px; }
+  .chart-wrap { position: relative; height: 180px; }
+
+  /* ── SIMULATOR ── */
+  .sim-slider-row { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; flex-wrap: wrap; }
+  .sim-label { font-size: 13px; color: #6B7A90; min-width: 110px; }
+  .sim-val { font-size: 16px; font-weight: 700; min-width: 70px; text-align: center; color: #1A3A5C; }
+  input[type=range] { flex: 1; min-width: 180px; accent-color: #2E6DA4; }
+  .sim-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 12px; }
+  .sim-card { background: #F0F4F9; border-radius: 10px; padding: 12px; }
+  .sim-card-label { font-size: 11px; color: #6B7A90; margin-bottom: 4px; }
+  .sim-card-val { font-size: 19px; font-weight: 700; }
+  .sim-note { font-size: 11px; color: #9BAABB; margin-top: 4px; }
+
+  /* ── RISK ROWS ── */
+  .risk-list { display: flex; flex-direction: column; gap: 0; }
+  .risk-row { display: flex; align-items: flex-start; gap: 12px; padding: 13px 0; border-bottom: 1px solid #EEF1F6; }
+  .risk-row:last-child { border-bottom: none; }
+  .risk-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+  .risk-title { font-size: 14px; font-weight: 700; margin-bottom: 3px; color: #1A3A5C; }
+  .risk-desc  { font-size: 13px; color: #5A6A80; line-height: 1.65; }
+
+  /* ── ANALYSIS TEXT ── */
+  .analysis-block { margin-bottom: 20px; }
+  .analysis-block:last-child { margin-bottom: 0; }
+  .analysis-h { font-size: 15px; font-weight: 700; color: #1A3A5C; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 2px solid #DDE3EC; }
+  .analysis-p { font-size: 14px; color: #3D4F61; line-height: 1.8; margin-bottom: 6px; }
+  .analysis-p:last-child { margin-bottom: 0; }
+
+  /* ── INSIGHT BOXES ── */
+  .insight { border-radius: 10px; padding: 13px 16px; margin-bottom: 10px; font-size: 13px; line-height: 1.7; }
+  .insight:last-child { margin-bottom: 0; }
+  .i-green  { background: #EAF7EE; color: #1A5631; border-right: 4px solid #28A745; }
+  .i-yellow { background: #FFFAE6; color: #7A5200; border-right: 4px solid #FFC107; }
+  .i-blue   { background: #EAF1FB; color: #1A3A5C; border-right: 4px solid #2E6DA4; }
+  .i-red    { background: #FDECEA; color: #7B1A1A; border-right: 4px solid #C0392B; }
+
+  /* ── ACTION LIST ── */
+  .action-list { display: flex; flex-direction: column; gap: 10px; }
+  .action-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border-radius: 10px; }
+  .action-item .emoji { font-size: 18px; flex-shrink: 0; }
+  .action-title { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+  .action-desc  { font-size: 13px; line-height: 1.65; }
+  .a-red    { background: #FDECEA; color: #5C1010; }
+  .a-orange { background: #FEF5E7; color: #7A4A00; }
+  .a-yellow { background: #FFFAE6; color: #7A5200; }
+  .a-green  { background: #EAF7EE; color: #1A5631; }
+
+  /* ── COST BOXES ── */
+  .cost-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); gap: 12px; margin-bottom: 14px; }
+  .cost-box  { border-radius: 10px; padding: 14px; text-align: center; }
+  .cost-label { font-size: 11px; margin-bottom: 4px; }
+  .cost-val   { font-size: 20px; font-weight: 700; }
+  .cb-blue   { background: #D6E8F7; color: #1A3A5C; }
+  .cb-amber  { background: #FEF5E7; color: #7A5200; }
+  .cb-red    { background: #FDECEA; color: #7B1A1A; }
+
+  /* ── COLORS ── */
+  .c-red    { color: #C0392B; }
+  .c-green  { color: #1E7E34; }
+  .c-warn   { color: #C77700; }
+
+  /* ── FOOTER ── */
+  .page-footer { text-align: center; font-size: 12px; color: #9BAABB; margin-top: 40px; padding-top: 20px; border-top: 1px solid #DDE3EC; }
+</style>
+</head>
+<body>
+<div class="page-wrapper">
+
+  <!-- HEADER -->
+  <div class="main-header">
+    <h1>ניתוח תמהיל משכנתא</h1>
+    <p>בנק מזרחי טפחות · תיק 445126264 · מרץ 2026 · ניצן ואיתמר אבולעפיה</p>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">סכום שנמשך</div>
+      <div class="kpi-value kpi-blue">₪2,100,169</div>
+      <div class="kpi-sub">58% מתוך ₪3.6M שאושר</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">החזר נוכחי (מרץ 2026)</div>
+      <div class="kpi-value kpi-blue">₪5,967</div>
+      <div class="kpi-sub">לא כולל מסלולים 28+29</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">החזר מאפריל 2026</div>
+      <div class="kpi-value kpi-warn">₪8,670</div>
+      <div class="kpi-sub">לאחר כניסת מסלולים 28+29</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">חשיפה למשתנה/צמוד</div>
+      <div class="kpi-value kpi-danger">66.5%</div>
+      <div class="kpi-sub">מתוכם 24.5% צמוד יורו</div>
+    </div>
+  </div>
+
+  <!-- SECTION 1: TRANCHE TABLE -->
+  <div class="section-card">
+    <div class="section-header sh-navy">1 · פירוט מסלולים עיקריים</div>
+    <div style="overflow-x:auto;">
+      <table class="data-table">
+        <thead><tr>
+          <th>מסלול</th><th>קרן</th><th>ריבית</th><th>הצמדה</th><th>שיטה</th><th>חודשי</th>
+        </tr></thead>
+        <tbody>
+          <tr><td><span class="badge b-blue">קבועה ₪</span>מסלול 13</td><td>₪435,424</td><td>4.59%</td><td>ללא</td><td><span class="badge b-grace">גרייס ⚠</span></td><td><b>₪1,666</b></td></tr>
+          <tr class="alt"><td><span class="badge b-teal">יורו €</span>מסלול 18</td><td>₪434,000</td><td>~3.97%</td><td>יורו</td><td><span class="badge b-grace">גרייס ⚠</span></td><td><b>₪1,381</b></td></tr>
+          <tr><td><span class="badge b-amber">משתנה ₪</span>מסלול 19</td><td>₪434,000</td><td>4.71%</td><td>ללא</td><td><span class="badge b-grace">גרייס ⚠</span></td><td><b>₪1,703</b></td></tr>
+          <tr class="alt"><td><span class="badge b-blue">קבועה ₪</span>מסלול 21</td><td>₪79,789</td><td>4.49%</td><td>ללא</td><td><span class="badge b-shp">שפיצר</span></td><td><b>₪405</b></td></tr>
+          <tr><td><span class="badge b-amber">משתנה ₪</span>מסלול 23</td><td>₪79,787</td><td>4.45%</td><td>ללא</td><td><span class="badge b-shp">שפיצר</span></td><td><b>₪403</b></td></tr>
+          <tr class="alt"><td><span class="badge b-teal">יורו €</span>מסלול 27</td><td>₪77,997</td><td>~4.05%</td><td>יורו</td><td><span class="badge b-shp">שפיצר</span></td><td><b>₪367</b></td></tr>
+          <tr class="new-row"><td><span class="badge b-blue">קבועה ₪</span>מסלול 28 ✦</td><td>₪184,000</td><td>4.51%</td><td>ללא</td><td><span class="badge b-shp">שפיצר</span></td><td><b class="c-warn">~₪935</b></td></tr>
+          <tr class="new-row"><td><span class="badge b-amber">משתנה ₪</span>מסלול 29 ✦</td><td>₪366,000</td><td>4.10%</td><td>ללא</td><td><span class="badge b-shp">שפיצר</span></td><td><b class="c-warn">~₪1,768</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-footer">✦ נמשכו 08/03/2026 — תחיל חיוב מ-15/04/2026 · 6 מסלולי "פיצול טכני" קטנים (כ"א מתחת ל-₪3,000) הושמטו לצרכי קריאות</div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title">הרכב לפי סוג ריבית/הצמדה</div>
+      <div class="legend">
+        <span><span class="legend-dot" style="background:#185FA5;"></span>קבועה ₪ — 33.4%</span>
+        <span><span class="legend-dot" style="background:#BA7517;"></span>משתנה ₪ — 42%</span>
+        <span><span class="legend-dot" style="background:#0F6E56;"></span>יורו — 24.5%</span>
+      </div>
+      <div class="chart-wrap"><canvas id="typeChart" role="img" aria-label="33.4 קבועה, 42 משתנה שקל, 24.5 יורו">33.4% קבועה, 42% משתנה, 24.5% יורו</canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">שיטת פירעון קרן</div>
+      <div class="legend">
+        <span><span class="legend-dot" style="background:#D85A30;"></span>גרייס (ריבית בלבד) — 62%</span>
+        <span><span class="legend-dot" style="background:#1D9E75;"></span>שפיצר (קרן+ריבית) — 38%</span>
+      </div>
+      <div class="chart-wrap"><canvas id="methodChart" role="img" aria-label="62 גרייס, 38 שפיצר">62% גרייס, 38% שפיצר</canvas></div>
+    </div>
+  </div>
+
+  <!-- SECTION 2: EXPLANATION -->
+  <div class="section-card">
+    <div class="section-header sh-navy">2 · הסבר כל מסלול בפועל</div>
+    <div class="section-body">
+      <div class="analysis-block">
+        <div class="analysis-h">א. קבועה שקלית לא צמודה — ₪702,036 | 33.4%</div>
+        <p class="analysis-p">מסלולים 13, 21, 28. הריבית נעולה לתמיד — 4.49%–4.59%. הרכיב הכי יציב בתמהיל: לא משנה מה יקרה לריבית בנק ישראל, לשוק ההון או ליורו — ההחזר לא ישתנה. מסלול 13 בגרייס (ריבית בלבד), 21 ו-28 בשפיצר. חיסרון: אם הריבית תרד מאוד בעתיד, עמלת הפרעון המוקדם עלולה להיות גבוהה.</p>
+      </div>
+      <div class="analysis-block">
+        <div class="analysis-h">ב. משתנה שקלית — אג"ח ממשלתי, עדכון כל 2 שנים — ₪880,000 | 42%</div>
+        <p class="analysis-p">מסלולים 19, 23, 29. הריבית מתעדכנת בתאריך עוגן כל שנתיים לפי תשואת אג"ח ממשלתי + מרווח קבוע של 0.77%. כרגע: 4.10%–4.71%. זהו הרכיב הגדול ביותר בתיק — אם ריביות עולות, ההחזר עולה. אם יורדות — ייזל. מועדי עדכון קרובים: ספטמבר–דצמבר 2027 — יש לסמן ביומן.</p>
+      </div>
+      <div class="analysis-block">
+        <div class="analysis-h">ג. צמוד יורו + יוריבור, עדכון כל 3 חודשים — ₪512,000 | 24.5%</div>
+        <p class="analysis-p">מסלולים 18, 27. כפול חשיפה: הריבית (יוריבור) מתעדכנת כל 3 חודשים — כרגע ~3.97%. הקרן עצמה נקובה ביורו: כשיורו מתחזק מול השקל — הקרן בשקלים עולה. בדוח הנוכחי יורו נחלש ולכן מסלול 18 ירד ב-₪34,535 — זה יכול להתהפך.</p>
+      </div>
+      <div class="analysis-block" style="margin-bottom:0;">
+        <div class="analysis-h">ד. גרייס — מה זה אומר בפועל?</div>
+        <p class="analysis-p">שלושה מסלולים (13, 18, 19) משלמים כרגע ריבית בלבד — ₪4,750/חודש על ₪1,303,424. הקרן לא זזה. כשהגרייס יסתיים (יש לברר מהבנק), ההחזר יקפוץ בכ-₪2,700 נוספים — מ-₪8,670 לכ-₪11,400 בחודש.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 3: RISK -->
+  <div class="section-card">
+    <div class="section-header sh-navy">3 · האם התמהיל מאוזן?</div>
+    <div class="section-body">
+      <div class="risk-list">
+        <div class="risk-row">
+          <div class="risk-dot" style="background:#C0392B;"></div>
+          <div><div class="risk-title">חשיפה לריבית — גבוהה (66.5%)</div><div class="risk-desc">רק 33.4% מוגן מעליות. כל עלייה של 1% = +₪1,160/חודש. שאלת מפתח: האם אתם מסוגלים לספוג עוד ₪1,000–₪1,500 לחודש?</div></div>
+        </div>
+        <div class="risk-row">
+          <div class="risk-dot" style="background:#E67E22;"></div>
+          <div><div class="risk-title">חשיפת מטבע — נוכחת (24.5%)</div><div class="risk-desc">24.5% צמוד יורו ללא הכנסות ביורו. עלייה של 10% ביורו/שקל = כ-₪48,000 תוספת לקרן ועוד ~₪160/חודש בריבית.</div></div>
+        </div>
+        <div class="risk-row">
+          <div class="risk-dot" style="background:#C0392B;"></div>
+          <div><div class="risk-title">גרייס — 62% לא יורד ⚠ קריטי</div><div class="risk-desc">₪1,303,424 בשלושה מסלולי גרייס — הקרן קפואה. כשיסתיים — הפגיעה בתזרים תהיה חדה. יש לברר מועד בדחיפות.</div></div>
+        </div>
+        <div class="risk-row">
+          <div class="risk-dot" style="background:#1D9E75;"></div>
+          <div><div class="risk-title">אין הצמדה למדד — יתרון</div><div class="risk-desc">אף מסלול אינו צמוד מדד המחירים לצרכן. בסביבת אינפלציה — זה יתרון משמעותי לעומת משכנתאות ישנות רבות.</div></div>
+        </div>
+        <div class="risk-row">
+          <div class="risk-dot" style="background:#E67E22;"></div>
+          <div><div class="risk-title">רכיב קבוע — נמוך יחסית</div><div class="risk-desc">רק 33.4% קבוע. כדאי לשקול הגדלתו במשיכות העתידיות (~₪1.5M) ל-40%–45% אם הריביות מאפשרות.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 4: SIMULATOR -->
+  <div class="section-card">
+    <div class="section-header sh-blue">4 · סימולטור — השפעת שינוי ריביות</div>
+    <div class="section-body">
+      <div class="sim-slider-row">
+        <span class="sim-label">שינוי ריבית:</span>
+        <input type="range" id="rateSlider" min="-150" max="250" value="0" step="25">
+        <span class="sim-val" id="rateDisplay">+0.00%</span>
+      </div>
+      <div class="sim-cards">
+        <div class="sim-card"><div class="sim-card-label">תוספת חודשית</div><div class="sim-card-val" id="monthlyImpact">₪0</div></div>
+        <div class="sim-card"><div class="sim-card-label">החזר חדש מוערך</div><div class="sim-card-val" id="newMonthly">₪8,670</div></div>
+        <div class="sim-card"><div class="sim-card-label">תוספת שנתית</div><div class="sim-card-val" id="annualImpact">₪0</div></div>
+        <div class="sim-card"><div class="sim-card-label">% מהכנסה (₪40K)</div><div class="sim-card-val" id="incomeRatio">21.7%</div></div>
+      </div>
+      <div class="sim-note">מחושב על קרן משתנה: ~₪1,392,000 (66.5% מ-₪2.1M). הרכיב הקבוע (₪702K) אינו מושפע.</div>
+    </div>
+  </div>
+
+  <!-- SECTION 5: COST -->
+  <div class="section-card">
+    <div class="section-header sh-navy">5 · יוקר המשכנתא הכולל — כמה נשלם בסוף?</div>
+    <div class="section-body">
+      <p class="analysis-p" style="margin-bottom:14px;">בריבית ממוצעת 4.68% (שיעור ריבית לצרכי השוואה ע"פ הבנק), על ₪3,600,000 ל-30 שנה:</p>
+      <div class="cost-grid">
+        <div class="cost-box cb-blue"><div class="cost-label">החזר חודשי מוערך (לאחר סיום גרייס)</div><div class="cost-val">₪18,500–₪19,000</div></div>
+        <div class="cost-box cb-amber"><div class="cost-label">סך תשלומים (30 שנה)</div><div class="cost-val">~₪6.7–₪6.9M</div></div>
+        <div class="cost-box cb-red"><div class="cost-label">מתוכו ריבית בלבד</div><div class="cost-val">~₪3.1–₪3.3M</div></div>
+      </div>
+      <p class="analysis-p" style="font-size:13px;color:#6B7A90;">אלה הערכות בתרחיש בסיס ללא שינוי ריבית. בתרחיש עלייה של 2% — סך התשלומים יכול לטפס ל-₪7.5M+. כל ירידת ריבית עתידית על הרכיבים המשתנים תחסוך עשרות עד מאות אלפי שקלים.</p>
+    </div>
+  </div>
+
+  <!-- SECTION 6: REFINANCE -->
+  <div class="section-card">
+    <div class="section-header sh-navy">6 · האם יש מקום למחזור/שיפור?</div>
+    <div class="section-body">
+      <div class="insight i-green">עכשיו — לא. המשכנתא נפתחה לפני ~6 חודשים בלבד. מחזור כעת יעלה כסף (עמלת פרעון מוקדם) ואין הצדקה כלכלית.</div>
+      <div class="insight i-yellow">ספטמבר–אוקטובר 2027 — חלון הזדמנויות: מסלולים 19, 23 (₪513,787 ביחד) מתעדכנים. על הרכיב המשתנה אין עמלת פרעון ביום עדכון הריבית. אם ריביות ירדו — זה הזמן לבחון מחזור ולעבור לקבוע.</div>
+      <div class="insight i-blue">כלל אצבע: שיעורי ההשוואה שלכם: 4.58%–5.07%. אם ריביות ירדו ל-3.5%–4% — שווה לבחון. הפרש של 1% על ₪880K = כ-₪8,800/שנה חיסכון.</div>
+      <div class="insight i-yellow" style="margin-bottom:0;">מסלול 13 (קבועה 4.59%) — עמלת פרעון מוקדם עלולה להיות גבוהה. כדאי לשאול את הבנק על פירעון חלקי ממשיכות עתידיות.</div>
+    </div>
+  </div>
+
+  <!-- SECTION 7: ACTION ITEMS -->
+  <div class="section-card">
+    <div class="section-header sh-navy">7 · נקודות קריטיות — מה לעשות?</div>
+    <div class="section-body">
+      <div class="action-list">
+        <div class="action-item a-red">
+          <span class="emoji">🔴</span>
+          <div><div class="action-title">לברר מיידית — מועד תום הגרייס</div><div class="action-desc">לפנות לבנק ולקבל לוח תשלומים מלא לכל מסלול גרייס (13, 18, 19) עם תאריך מדויק שבו יסתיים וההחזר החדש שיחול.</div></div>
+        </div>
+        <div class="action-item a-orange">
+          <span class="emoji">🟠</span>
+          <div><div class="action-title">משיכות עתידיות (₪1.5M) — לא הכל בבת-אחת</div><div class="action-desc">לתזמן משיכות בחוכמה. לשקול הגדלת הרכיב הקבוע ל-40%–45% מהסכום הנותר. לפני כל משיכה — לבדוק שיעור ריבית השוואה מול שוק.</div></div>
+        </div>
+        <div class="action-item a-yellow">
+          <span class="emoji">🟡</span>
+          <div><div class="action-title">לסמן ביומן — ספטמבר 2027</div><div class="action-desc">עדכון ריבית מסלולים 19, 23. לקרוא לפגישה עם בנקאי המשכנתאות חודש לפני לבחינת תנאים ואפשרות מחזור ללא עמלה.</div></div>
+        </div>
+        <div class="action-item a-yellow">
+          <span class="emoji">🟡</span>
+          <div><div class="action-title">שע"ח יורו — לבדוק אפשרות חלפן</div><div class="action-desc">הבנק משתמש בשע"ח שלו (לרוב פחות טוב). אם ניתן לרכוש יורו בשוק חופשי ולהעביר — שווה לחסוך מרווח 0.5%–1%.</div></div>
+        </div>
+        <div class="action-item a-green">
+          <span class="emoji">🟢</span>
+          <div><div class="action-title">מחזור — לעקוב ולחכות</div><div class="action-desc">לבדוק רק כשריביות ירדו מתחת ל-3.5%–4%, בדגש על מסלולים 19 ו-29 (₪800K ביחד). עד אז — לא כדאי.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="page-footer">
+    ניתוח זה מבוסס על דוח פירעון מוקדם מבנק מזרחי טפחות מתאריך 09/03/2026 · נוצר בעזרת Claude AI · אינו מהווה ייעוץ משפטי או פיננסי
+  </div>
+
+</div><!-- /page-wrapper -->
+
+<script>
+  // Charts
+  new Chart(document.getElementById('typeChart').getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: ['קבועה ₪', 'משתנה ₪', 'יורו'],
+      datasets: [{ data: [33.4, 42, 24.5], backgroundColor: ['#185FA5','#BA7517','#0F6E56'], borderWidth: 2, borderColor: '#fff', hoverOffset: 5 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, cutout: '60%', plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.label + ': ' + c.raw + '%' } } } }
+  });
+
+  new Chart(document.getElementById('methodChart').getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: ['גרייס (ריבית בלבד)', 'שפיצר (קרן+ריבית)'],
+      datasets: [{ data: [62, 38], backgroundColor: ['#D85A30','#1D9E75'], borderWidth: 2, borderColor: '#fff', hoverOffset: 5 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, cutout: '60%', plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.label + ': ' + c.raw + '%' } } } }
+  });
+
+  // Simulator
+  const varP = 1392000, base = 8670;
+  const sl   = document.getElementById('rateSlider');
+  const disp = document.getElementById('rateDisplay');
+  const mImp = document.getElementById('monthlyImpact');
+  const nMon = document.getElementById('newMonthly');
+  const aImp = document.getElementById('annualImpact');
+  const iRat = document.getElementById('incomeRatio');
+
+  function fmt(n) {
+    const abs = Math.abs(n).toLocaleString('he-IL');
+    return (n >= 0 ? '+₪' : '-₪') + abs;
+  }
+
+  sl.addEventListener('input', function() {
+    const bps  = parseInt(this.value);
+    const rate = bps / 100;
+    const sign = rate >= 0 ? '+' : '';
+    disp.textContent = sign + rate.toFixed(2) + '%';
+
+    const mc = Math.round(varP * (bps / 10000) / 12);
+    const tm = base + mc;
+    const an = mc * 12;
+    const clr = mc > 0 ? '#C0392B' : mc < 0 ? '#1E7E34' : '#1A3A5C';
+
+    mImp.textContent = fmt(mc);  mImp.style.color = clr;
+    nMon.textContent = '₪' + tm.toLocaleString('he-IL'); nMon.style.color = clr;
+    aImp.textContent = fmt(an);  aImp.style.color = clr;
+    const pct = (tm / 40000 * 100).toFixed(1);
+    iRat.textContent = pct + '%';
+    iRat.style.color = tm/40000 > 0.35 ? '#C0392B' : tm/40000 > 0.28 ? '#C77700' : '#1E7E34';
+  });
+</script>
+</body>
+</html>
